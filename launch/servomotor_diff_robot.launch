@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_name" default="my_servomotor_robot"/>
+  <arg name="robot_ns" default="servo"/>
+  <arg name="robot_posture" default="-x 0 -y 0 -Y 0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">  <!-- Open Gazebo using the empty_world.launch -->
+    <!--arg name="world_name" value="$(find my_ugv_description)/worlds/empty.world"/-->
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find my_ugv_description)/config/servomotor_controller.yaml" command="load"/>
+
+  <!-- Send the robot XML to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find my_ugv_description)/urdf/servomotor_diff_robot_urdf.xacro robot_ns:=$(arg robot_ns)"/>
+ 
+   <!-- Push robot_description to factory and spawn robot in gazebo -->
+   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf $(arg robot_posture) -model $(arg robot_name)"
+     respawn="false" output="screen"/>
+ 
+  <!-- Load the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+	output="screen" args="joint_state_controller joint_position_controller" ns="$(arg robot_ns)"/> <!-- Note: ns must be specificated -->
+
+  <!-- Since the robot is composed of severals links/joints and a servomotor (using ros_control), to visualize the robot in RViz, the "robot_state_publisher" node, using remap tag, is required --> 
+  <!-- Convert joint states to TF transforms for Rviz, robot position, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="" />
+    <remap from="/joint_states" to="$(arg robot_ns)/joint_states" />
+  </node>
+  
+  <!-- Show in RViz -->
+  <!--node name="rviz" pkg="rviz" type="rviz"/-->
+  <!--node name="rviz" pkg="rviz" type="rviz" args=" -d $(find my_ugv_description)/rviz/my_sensors_robot_config.rviz" /--><!-- The same configuration used for sensors -->
+
+
+  <!-- Important: To test the movement of the joints, the "joint_state_publisher_gui" node can be used. Thus, Gazebo simulator and the controller_spawner node can be omitted. Also, the remap tag, of the robot_state_publisher node, must be omitted. This is only for testing in RViz. Please, see "servo_rviz_diff_robot.launch" -->
+
+
+  <!-- Note: To visualize several robots correctly in RViz, the node that publishes the correct TF transformations tree must be executed. To launch several robots in Gazebo, the group tag is used -->
+
+
+  <!-- Spawn and use a second robot in Gazezo -->
+  <!--arg name="robot_name2" default="my_robot2"/>
+  <arg name="robot_ns2" default="servo2"/>
+  <arg name="robot_posture2" default="-x 1.0 -y 0 -Y 0"/--><!--If a collision between the robots exists, the second robot will not be spawned-->
+
+  <!--rosparam file="$(find my_ugv_description)/config/servomotor_controller2.yaml" command="load"/>
+
+<group ns="$(arg robot_ns2)">
+  <param name="robot_description" command="$(find xacro)/xacro -inorder $(find my_ugv_description)/urdf/servomotor_diff_robot_urdf.xacro robot_ns:=$(arg robot_ns2)"/>
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf $(arg robot_posture2) -model $(arg robot_name2)"
+     respawn="false" output="screen"/>
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+	output="screen" args="joint_state_controller joint_position_controller"/-->
+  <!-- Note that the group tag is used, so the ns parameter is not required-->
+
+  <!--node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="" />
+  </node>
+</group-->
+
+</launch>
+

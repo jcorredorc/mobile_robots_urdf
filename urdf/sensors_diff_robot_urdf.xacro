@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+<robot name="sensors_diff_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find my_ugv_description)/urdf/sensors_diff_robot_gazebo.xacro"/>
+
+  <!-- Robot Gazebo Plugins -->
+  <xacro:my_robot_sensors />
+
+
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.01" rpy="0 0 0"/>
+  </joint>
+  <link name="base_link">
+    <visual>
+      <origin xyz="-0.03 0 0.015" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.14 0.14 0.03" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="-0.03 0 0.015" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.140 0.140 0.03"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.015" rpy="0 0 0"/> <!-- Since a plugin is used, an offset along its X axis can affect the robot behaivior -->
+      <mass value="8.25e-01"/>
+      <inertia ixx="1.4e-03" ixy="0" ixz="0"
+               iyy="1.4e-03" iyz="0"
+               izz="2.695e-03" />
+    </inertial>
+  </link>
+
+  <!-- Wheels definition (joints and links) -->
+  <joint name="wheel_left_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_left_link"/>
+    <origin xyz="0 0.08 0.023" rpy="-1.57 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="wheel_left_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry>
+        <!--cylinder length="0.018" radius="0.033"/-->
+        <mesh filename="package://my_ugv_description/meshes/husky_wheel.stl" scale="0.18 0.18 0.18"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.018" radius="0.033"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="3e-02" />
+      <inertia ixx="9e-06" ixy="0" ixz="0"
+               iyy="9e-06" iyz="0"
+               izz="1.6e-05" />
+      </inertial>
+  </link>
+
+  <joint name="wheel_right_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_right_link"/>
+    <origin xyz="0 -0.08 0.023" rpy="-1.57 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <link name="wheel_right_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry>
+        <!--cylinder length="0.018" radius="0.033"/-->
+        <mesh filename="package://my_ugv_description/meshes/husky_wheel.stl" scale="0.18 0.18 0.18"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.018" radius="0.033"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="3e-02" />
+      <inertia ixx="9e-06" ixy="0" ixz="0"
+               iyy="9e-06" iyz="0"
+               izz="1.6e-05" />
+      </inertial>
+  </link>
+
+  <!-- Caster wheel definition (joint and link) -->
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_link"/>
+    <origin xyz="-0.08 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="caster_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.01"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.01"/>
+      </geometry>
+    </collision>
+    <!-- Since the caster wheel is only a point of contact, inertial tag can be ommited -->
+    <!--inertial>
+      <origin xyz="-0.08 0 0" />
+      <mass value="5e-02" />
+      <inertia ixx="2e-06" ixy="0" ixz="0" iyy="2e-06" iyz="0" izz="2e-06" />
+    </inertial-->
+  </link>
+
+
+  <!-- SENSORS definition -->
+  <!-- LIDAR -->
+  <joint name="scan_joint" type="fixed"> <!-- The scan_joint must be high enough to avoid possible interferences -->
+    <parent link="base_link"/>
+    <child link="base_scan"/>
+    <origin xyz="-0.07 0 ${0.03+0.06}" rpy="0 0 0"/>
+  </joint>
+  <link name="base_scan">
+    <visual>
+      <origin xyz="0 0 -0.015" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://my_ugv_description/meshes/hokuyo.dae" scale="1 1 1.3" />
+        <!--cylinder radius="0.035" length="0.1" /-->
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.035" length="0.11"/>
+      </geometry>
+    </collision>
+    <!-- Since a sensor is used, the inertial tag can be ommited -->
+  </link>
+
+
+  <!-- The joint and link of the camera. Note: Both link name and joint name must be the same as the ones used in the plugin -->
+  <joint name="camera_rgb_optical_joint" type="fixed">
+    <origin xyz="0.03 0 0.04" rpy="0 0 0"/> <!-- X axis is considered as the optical axis -->
+    <parent link="base_link"/>
+    <child link="camera_rgb_frame"/>
+  </joint>
+  <link name="camera_rgb_frame">
+    <visual>
+      <origin xyz="-0.015 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.04 0.02"/>
+      </geometry>
+      <material name="orange"/> <!--Color in RViz-->
+    </visual>
+    <visual>
+      <origin xyz="-0.01 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://my_ugv_description/meshes/max_sonar_ez4.dae" scale="1 1 0.8" />
+      </geometry>
+      <material name="orange"/> <!--Color in RViz-->
+    </visual>
+
+    <collision>
+      <origin xyz="-0.01 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.03 0.04 0.02"/>
+      </geometry>
+    </collision>
+    <!-- Since a sensor is used, the inertial tag can be ommited -->
+  </link>
+
+</robot>

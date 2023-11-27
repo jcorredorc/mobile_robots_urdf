@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_name" default="my_servomotor_robot"/>
+  <arg name="robot_ns" default="servo"/>
+  <arg name="robot_posture" default="-x 0 -y 0 -Y 0"/>
+
+  <!-- Send the robot XML to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find my_ugv_description)/urdf/servomotor_diff_robot_urdf.xacro robot_ns:=$(arg robot_ns)"/>
+ 
+   <!-- Push robot_description to factory and spawn robot in gazebo -->
+   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf $(arg robot_posture) -model $(arg robot_name)"
+     respawn="false" output="screen"/>
+ 
+   <!-- The "joint_state_publisher_gui" node is needed to move and visualize all the joints of the robot -->
+   <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="joint_state_publisher_gui" output="screen" >
+     <param name="publish_frequency" type="double" value="50.0" />
+     <param name="tf_prefix" value="" />
+   </node>
+
+
+  <!-- Since the robot is composed of severals links/joints and a servomotor, to visualize the robot and move the joints in RViz, the "robot_state_publisher" node, without using remap tag --> 
+  <!-- Convert joint states to TF transforms for Rviz, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="" />
+  </node>
+  
+  <!-- Show in Rviz -->
+  <node name="rviz" pkg="rviz" type="rviz"/>
+
+</launch>
+

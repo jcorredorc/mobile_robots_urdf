@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot name="omni4wheels" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="base_color" default="Red"/>
+
+  <gazebo reference="$(arg robot_ns)/base_link"> <!-- Physical properties of the base_link -->
+    <!-- Since a planar movement plugin is used, gravity does not behave correctly and mu1, mu2, etc. parameters can be ommited -->
+    <material>Gazebo/$(arg base_color)</material> <!-- Color of the base link in Gazebo -->
+  </gazebo>
+
+
+  <gazebo><!-- The robot_ns is used for a correct robot visualization in Rviz when using several robots -->
+    <plugin name="omnidirectional_controller" filename="libgazebo_ros_planar_move.so"> <!-- 3 DOF plugin, (Vx,Vy,Wz) -->
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>$(arg robot_ns)/odom</odometryFrame>
+      <odometrySource>world</odometrySource> <!-- world or encoder -->
+      <publishOdomTF>true</publishOdomTF> <!-- publish the Fixed frame called $(arg robot_ns)/odom, default = true-->
+      <robotBaseFrame>$(arg robot_ns)/base_footprint</robotBaseFrame>
+      <publishTf>true</publishTf>
+      <!-- publishWheelJointState tag is Not used for planar_move plugin -->
+      <legacyMode>false</legacyMode>
+      <odometryRate>50.0</odometryRate>
+    </plugin>
+  </gazebo>
+
+ <!-- ros_control plugin -->
+ <xacro:macro name="servomotor_controller">
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>$(arg robot_ns)</robotNamespace> <!-- The namespace must coincide with the one given in "*.yaml" and "*.launch" files -->
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+      <legacyModeNS>true</legacyModeNS>
+    </plugin>
+  </gazebo>
+ </xacro:macro>
+
+</robot>

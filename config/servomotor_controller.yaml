@@ -1,0 +1,12 @@
+servo: # Namespace
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+  
+  # Position Controller ---------------------------------------
+  joint_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: servo_joint
+    pid: {p: 0.002, i: 0.0, d: 0.0} #The lower the inertia, the lower the P gain
+

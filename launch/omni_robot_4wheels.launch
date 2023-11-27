@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_ns1" default="omni1"/>
+  <arg name="initial_posture1" default="-x 0 -y 0 -z 0.02 -Y 0"/>
+  <arg name="base_color1" default="DarkGrey"/>
+
+  <arg name="robot_ns2" default="omni2"/>
+  <arg name="initial_posture2" default="-x 1.0 -y 0 -z 0.02 -Y 0"/>
+  <arg name="base_color2" default="Red"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">  <!-- Open Gazebo using the empty_world.launch -->
+    <!--arg name="world_name" value="$(find my_ugv_description)/worlds/empty.world"/-->
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find my_ugv_description)/config/omni_4wheels_controller.yaml" command="load"/>
+
+<group ns="$(arg robot_ns1)">
+  <!-- Send the robot XML to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find my_ugv_description)/urdf/omni_robot_4wheels_urdf.xacro robot_ns:=$(arg robot_ns1) base_color:=$(arg base_color1)" />
+ 
+  <!-- Push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf $(arg initial_posture1) -model $(arg robot_ns1)"
+     respawn="false" output="screen"/>
+
+  <!-- To visualize the robot in RViz, both the "joint_state_controller" and the "robot_state_publisher" nodes are setup next --> 
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+	output="screen" args="joint_state_controller wheel1_joint_vel_contr wheel2_joint_vel_contr wheel3_joint_vel_contr wheel4_joint_vel_contr"/>
+
+  <!-- Convert joint states to TF transforms for Rviz, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="" />
+    <!--remap from="/joint_states" to="/ns/joint_states" /--> <!-- Not used because the group tag is used -->
+  </node>
+
+</group>
+
+  <!-- Show in Rviz -->
+  <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find my_ugv_description)/rviz/my_omni_robots_config.rviz" /-->
+
+
+  <!-- Important: To visualize several robots correctly in RViz, the group tag should be used for all robots and the node that publishes the correct TF transformations tree must be executed.
+  Note: To rotate the wheels of each robot, according to the kinematic model, the node that publishes every velocity command for all wheels must be running -->
+
+
+  <!-- A second omnidirectional mobile robot -->
+  <!--rosparam file="$(find my_ugv_description)/config/omni_4wheels_controller2.yaml" command="load"/>
+  <group ns="$(arg robot_ns2)">
+    <param name="robot_description" command="$(find xacro)/xacro -inorder $(find my_ugv_description)/urdf/omni_robot_4wheels_urdf.xacro robot_ns:=$(arg robot_ns2)" />
+   
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf $(arg initial_posture2) -model $(arg robot_ns2)"
+     respawn="false" output="screen"/>
+
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+	output="screen" args="joint_state_controller wheel1_joint_vel_contr wheel2_joint_vel_contr wheel3_joint_vel_contr wheel4_joint_vel_contr"/>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="" />
+    </node>
+  </group-->
+
+</launch>
+

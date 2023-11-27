@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_name" default="my_sensors_robot"/>
+  <arg name="robot_posture" default="-x 0 -y 0 -z 0.02 -Y 0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">  <!-- Open Gazebo using the empty_world.launch -->
+    <arg name="world_name" value="$(find my_ugv_description)/worlds/empty.world"/>
+    <arg name="paused" value="true"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+
+  <!-- Send the robot XML to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find my_ugv_description)/urdf/sensors_diff_robot_urdf.xacro"/>
+ 
+   <!-- Push robot_description to factory and spawn robot in gazebo -->
+   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf $(arg robot_posture) -model $(arg robot_name)"
+     respawn="false" output="screen"/>
+
+  <!-- Since the robot is composed of severals links/joints and only senosrs are used (plugins), to visualize the robot in RViz, the "robot_state_publisher" node is required --> 
+  <!-- Convert joint states to TF transforms for Rviz, position of the robot, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="" />
+  </node>
+
+<!-- Note: To visualize severals robots correctly in Rviz, a node that publishes the correct TF tree must be executed -->
+
+  <!-- Show in Rviz -->
+  <!--node name="rviz" pkg="rviz" type="rviz"/-->
+  <node name="rviz" pkg="rviz" type="rviz" args=" -d $(find my_ugv_description)/rviz/my_sensors_robot_config.rviz" />
+
+</launch>
+

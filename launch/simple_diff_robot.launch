@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_name" default="my_diff_robot"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="Y" default="0"/>
+
+  <!-- Launch Gazebo with an empty world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+
+
+  <!-- Send the robot XML to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find my_ugv_description)/urdf/simple_diff_robot_urdf.xacro" />
+   
+  <!-- Push robot_description to factory and spawn robot in Gazebo -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+   args="-param robot_description -urdf -x $(arg x) -y $(arg y) -z 0.05 -R 0.0 -P 0.0 -Y $(arg Y) -model $(arg robot_name)"
+     respawn="false" output="screen"/>
+  
+  <!-- Show in RViz -->
+  <!-- Convert joint states to TF transforms for RViz, position of the robot, etc -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="" />
+  </node>
+
+  <!-- NOTE: The "joint_state_publisher" node is not required, due to the "libgazebo_ros_diff_drive.so" plugin allows to do that with the <publishWheelTF> tag -->
+  <!--node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" respawn="false" output="screen"/-->
+
+</launch>

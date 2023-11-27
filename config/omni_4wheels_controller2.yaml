@@ -1,0 +1,23 @@
+omni2: # Namespace
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+  
+  # Velocity Controllers ---------------------------------------
+  wheel1_joint_vel_contr:
+    type: effort_controllers/JointVelocityController
+    joint: wheel1_joint
+    pid: {p: 0.06, i: 0.0, d: 0.0}
+  wheel2_joint_vel_contr:
+    type: effort_controllers/JointVelocityController
+    joint: wheel2_joint
+    pid: {p: 0.06, i: 0.0, d: 0.0}
+  wheel3_joint_vel_contr:
+    type: effort_controllers/JointVelocityController
+    joint: wheel3_joint
+    pid: {p: 0.06, i: 0.0, d: 0.0}
+  wheel4_joint_vel_contr:
+    type: effort_controllers/JointVelocityController
+    joint: wheel4_joint
+    pid: {p: 0.06, i: 0.0, d: 0.0}
